@@ -4,7 +4,7 @@
 Ticker      tiTimer;
 DigitalIn   Button(PC_13);
 
-Serial PC(PA_2,PA_3);
+Serial      PC(PA_2,PA_3);
 
 DigitalOut  ledRed(PB_4);
 DigitalOut  ledGreen(PB_5);
