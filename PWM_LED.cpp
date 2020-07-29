@@ -12,11 +12,6 @@ DigitalIn btn(PC_13);
 float f = 0.0F;
 int pwmUpDown = 0;
 
-
-
-
-
-
 void sinLED(){
 
     if(pwmUpDown == 0){

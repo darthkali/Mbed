@@ -1,39 +1,34 @@
 #include "mbed.h"
 
 Serial      pc(PA_2,PA_3);
-Ticker      tiTimer;
 InterruptIn btn(PC_13);
 Timer       interruptTimer;
+Timer       stopWatchTimer;
 
 // --- Variables ---
-int nTime = 0; //59000
-int _min = 0;
-int _sek = 0;
-int _mill = 0;
-int startStop = 0;
-
-
-void Tick()
-{
-    nTime += 1;
-}
+int nTime = 0;
+int nMin = 0;
+int nSek = 0;
+int nMill = 0;
+int nStartStop = 0;
 
 void btnPressed(){
     if(interruptTimer.read()> 0.1F){
-        nTime = 0;
-        startStop == 1 ? startStop = 0 : startStop = 1;
+        stopWatchTimer.reset();
+        nStartStop == 1 ? nStartStop = 0 : nStartStop = 1;
         interruptTimer.reset();
     }
 }
 
 void calcTime()
 {
+    int nTime = (int)(stopWatchTimer.read() * 1000); //+59000 - test the Minutes
     //minute
-    _min = (nTime / 1000 / 60) % 60;
+    nMin = (nTime / 1000 / 60) % 60;
     //second
-    _sek = (nTime / 1000) % 60;
+    nSek = (nTime / 1000) % 60;
     //hundredths
-    _mill = nTime % 1000;
+    nMill = nTime % 1000;
 }
 
 
@@ -41,18 +36,17 @@ void calcTime()
 int main()
 {
     pc.baud(115200);            // baud rate
-    tiTimer.attach(Tick, 0.001F);
-    btn.fall(btnPressed);
+    stopWatchTimer.start();
     interruptTimer.start();
+    btn.fall(btnPressed);
 
     while (true)
     {
-        if(startStop == 1){
+        if(nStartStop == 1){
             pc.printf("\x0C""Stoppuhr: ");
 
             calcTime();
-
-            pc.printf("%d:%d,%d \r\n",_min, _sek, _mill);
+            pc.printf("%d:%d,%d \r\n",nMin, nSek, nMill);
 
             wait(0.1);
         }
