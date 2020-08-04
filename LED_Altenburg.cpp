@@ -13,7 +13,7 @@
 
 DigitalOut Led(PA_5);
 DigitalIn Btn(PC_13);
-Serial PC(PA_2,PA_3);           // UART
+Serial PC(PA_2, PA_3);           // UART
 
 // Schater für Debug modus
 #define DEBUGGING           1
@@ -26,39 +26,35 @@ Serial PC(PA_2,PA_3);           // UART
 #define SCOPE2(valueA, valueB) Scope (valueA, valueB)
 #else
 #define TRACE(text)
-    #define DEBUG(name)
-    #define SCOPE(value)
+#define DEBUG(name)
+#define SCOPE(value)
 #endif
 
 // Trace-Ausgabe
-void Trace(char* pszText)
-{
+void Trace(char *pszText) {
     if (pszText != 0)
-        PC.printf("%s\r\n",pszText);
+        PC.printf("%s\r\n", pszText);
 }
 
 // Debug-Ausgabe
-void Debug(char* pszName, int nValue)
-{
+void Debug(char *pszName, int nValue) {
     if (pszName != 0)
-        PC.printf("%s = %d\r\n",pszName, nValue);
+        PC.printf("%s = %d\r\n", pszName, nValue);
 }
 
 // Scope output
-void Scope(float fValueA, float fValueB){
+void Scope(float fValueA, float fValueB) {
     PC.printf("#A%f\rB%f\r\n", fValueA, fValueB);
 }
 
 
 // Hilfsfunktion
-bool BtnDown()
-{
+bool BtnDown() {
     return Btn == 0;
 }
 
 // ein char empfangen
-void RxChar()
-{
+void RxChar() {
     char ch = PC.getc();
 
     if (ch == '0')
@@ -68,8 +64,7 @@ void RxChar()
 }
 
 // main loop
-int main()
-{
+int main() {
     PC.baud(115200);
     PC.attach(RxChar);
 
@@ -81,8 +76,7 @@ int main()
     float fCos = 0.00;
     float fRad = 0.00;
 
-    while(1)
-    {
+    while (1) {
         nCount -= 1;
         nIndex += 1;
 

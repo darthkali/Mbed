@@ -8,10 +8,8 @@ DigitalOut led5(PA_8);
 DigitalOut led6(PA_9);
 DigitalOut led7(PA_10);
 
-int main()
-{
-    while(1)
-    {
+int main() {
+    while (1) {
         led = !led;
         wait(0.1);
         led2 = !led2;

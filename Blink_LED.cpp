@@ -2,7 +2,7 @@
 
 DigitalOut Led(PA_5);
 DigitalIn Button(PC_13);
-Serial PC(PA_2,PA_3);                      // UART
+Serial PC(PA_2, PA_3);                      // UART
 
 
 // enable Debugging
@@ -14,34 +14,32 @@ Serial PC(PA_2,PA_3);                      // UART
 #define DEBUG(name) Debug(#name, name)
 #else
 #define TRACE(text)
-    #define DEBUG(name)
+#define DEBUG(name)
 #endif
 
-void Trace(char* pszText){
+void Trace(char *pszText) {
 
-    if(pszText != 0){
+    if (pszText != 0) {
         PC.printf("%s\r\n", pszText);
     }
 }
 
-void Debug(char* pszName, int nValue){
+void Debug(char *pszName, int nValue) {
 
-    if(pszName != 0){
+    if (pszName != 0) {
         PC.printf("%s = %d\r\n", pszName, nValue);
     }
 
 }
 
 // helper function to invert the Button
-bool BtnDown()
-{
+bool BtnDown() {
     return Button == 0;
 }
 
 
 // get a char
-void RxChar()
-{
+void RxChar() {
     char ch = PC.getc();
     ch == '1' ? Led = 1 : Led = 0;
 
@@ -49,8 +47,7 @@ void RxChar()
 
 
 // main function
-int main()
-{
+int main() {
 
     PC.baud(115200);
     PC.attach(RxChar);
@@ -61,7 +58,7 @@ int main()
     int nCount = 0;
     int nIndex = 0;
 
-    while(1) {
+    while (1) {
 
         nCount -= 1;
         nIndex += 1;

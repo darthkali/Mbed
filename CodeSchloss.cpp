@@ -1,16 +1,18 @@
 #include "mbed.h"
 #include <string>
 
-Ticker      tiTimer;
-DigitalIn   Button(PC_13);
+Ticker tiTimer;
+DigitalIn Button(PC_13);
 
-Serial      PC(PA_2,PA_3);
+Serial PC(PA_2, PA_3);
 
-DigitalOut  ledRed(PB_4);
-DigitalOut  ledGreen(PB_5);
+DigitalOut ledRed(PB_4);
+DigitalOut ledGreen(PB_5);
 
 // --- Types ---
-enum STATE {stINIT, stBLOCKED, stUNBLOCKED, stWAIT };
+enum STATE {
+    stINIT, stBLOCKED, stUNBLOCKED, stWAIT
+};
 
 // --- Variables ---
 STATE enState = stINIT;
@@ -22,35 +24,33 @@ bool passwordChecked = false;
 string password = "9137";
 
 // --- system tick ---
-void Tick()
-{
+void Tick() {
     nTime += 1;
 }
 
-void SetLed(int red,  int green){
+void SetLed(int red, int green) {
     ledRed = red;
     ledGreen = green;
 }
 
-void SetNextStateAndTheWaitTime(STATE state, int time){
+void SetNextStateAndTheWaitTime(STATE state, int time) {
     nStateChanged = nTime + time;
     enState = state;
 }
 
 
-void RxChar()
-{
+void RxChar() {
     char ch = PC.getc();
 
 
-    if(ch == password[index]) {
+    if (ch == password[index]) {
         index++;
-    }else {
+    } else {
         index = 0;
     }
 
 
-    if (index == password.length()){
+    if (index == password.length()) {
         index = 0;
         PC.printf(" - Passwort korrekt!\r\n");
         passwordChecked = true;
@@ -59,27 +59,25 @@ void RxChar()
     passwordChecked = false;
 }
 
-void StateMachine()
-{
-    switch (enState)
-    {
+void StateMachine() {
+    switch (enState) {
         case stINIT:
-            SetLed(0,0);
+            SetLed(0, 0);
             enState = stBLOCKED;
             break;
 
 
         case stBLOCKED:
-            SetLed(1,0);
-            if(passwordChecked){
+            SetLed(1, 0);
+            if (passwordChecked) {
                 SetNextStateAndTheWaitTime(stUNBLOCKED, 5);
             }
             break;
 
         case stUNBLOCKED:
-            SetLed(0,1);
-            if(nStateChanged - nTime <= 0){
-                SetLed(0,1);
+            SetLed(0, 1);
+            if (nStateChanged - nTime <= 0) {
+                SetLed(0, 1);
                 enState = stBLOCKED;
             }
             break;
@@ -88,17 +86,16 @@ void StateMachine()
 
 
 // --- Main ---
-int main()
-{
+int main() {
     tiTimer.attach(Tick, 10);
     PC.attach(RxChar);
 
     PC.baud(115200);
     PC.printf("Passwort eingeben:\r\n");
 
-    while(1)
-    {
+    while (1) {
         StateMachine();
 
     }
 }
+    

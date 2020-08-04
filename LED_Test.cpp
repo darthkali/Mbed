@@ -1,21 +1,18 @@
 #include "mbed.h"
 
-Serial PC(PA_2,PA_3);
+Serial PC(PA_2, PA_3);
 
-DigitalOut  ledRed(PB_4);
-DigitalOut  ledGreen(PB_5);
-
-
+DigitalOut ledRed(PB_4);
+DigitalOut ledGreen(PB_5);
 
 
-void SetLed(int red,  int green){
+void SetLed(int red, int green) {
     ledRed = red;
     ledGreen = green;
 }
 
 // get a char
-void RxChar()
-{
+void RxChar() {
     char ch = PC.getc();
     ch == '1' ? ledRed = 1 : ledRed = 0;
 
@@ -23,16 +20,14 @@ void RxChar()
 
 
 // --- Main ---
-int main()
-{
+int main() {
     PC.baud(115200);
     PC.attach(RxChar);
 
     PC.printf("\x0C""Enter Text: ");
 
 
-    while(1)
-    {
+    while (1) {
 
     }
 }

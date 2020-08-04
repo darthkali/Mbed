@@ -1,6 +1,6 @@
 #include "mbed.h"
 
-Serial pc(PA_2,PA_3);
+Serial pc(PA_2, PA_3);
 PwmOut pwm(PB_10);
 AnalogIn adc(PC_1);
 DigitalIn btn(PC_13);
@@ -12,21 +12,19 @@ DigitalIn btn(PC_13);
 float f = 0.0F;
 int pwmUpDown = 0;
 
-void sinLED(){
+void sinLED() {
 
-    if(pwmUpDown == 0){
+    if (pwmUpDown == 0) {
 
-        pwm = pwm +0.05f;
+        pwm = pwm + 0.05f;
 
-        if(pwm >= 1){
+        if (pwm >= 1) {
             pwmUpDown = 1;
         }
-    }
-    else
-    {
+    } else {
         pwm = pwm - 0.05f;
 
-        if(pwm <= 0){
+        if (pwm <= 0) {
             pwmUpDown = 0;
         }
     }
@@ -34,18 +32,15 @@ void sinLED(){
 
 
 // --- main ---
-int main()
-{
+int main() {
 
     pc.baud(115200);            // baud rate
     pwm.period(0.01F);         // T für 10kHz
     pwm = 0.0F;                // Duty Cycle in %
 
-    while (true)
-    {
+    while (true) {
 
         sinLED();
-
 
 
         f += 0.025F;
@@ -55,8 +50,8 @@ int main()
         float soll = pwm.read();
         float analog = adc.read();
 
-        pc.printf("Flag: %d --- PWM: %f --- Analog: %f\r\n",pwmUpDown, soll, analog);
-        pc.printf("#A%f\rB%f\r\n",soll, analog);
+        pc.printf("Flag: %d --- PWM: %f --- Analog: %f\r\n", pwmUpDown, soll, analog);
+        pc.printf("#A%f\rB%f\r\n", soll, analog);
 
 
         wait(0.05);
