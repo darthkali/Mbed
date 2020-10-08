@@ -1,16 +1,21 @@
 #include "mbed.h"
 
-#define MINHUMIDITY 0.7F        // Breakpoint on which humidity the system will react
+#define MINHUMIDITY     0.65F     // Breakpoint on which humidity the system will react 0.65
+#define DATARESOLUTION  10        // Resolution for the Serial Data which will be printed to the Terminal
 
 Serial      PC(PA_2,PA_3);      // UART
 AnalogIn    adSensor(PC_0);    
 DigitalOut  pump(PA_4);
+DigitalOut  onBoardLED(PA_5);
 Ticker      messureTimer;
 Timer       stopWatchTimer;
 
+
 // --- Variables ---
     float testPeak = 0;
+    float adinRaw = 0;
     int nStateChanged = 0;
+    int nPrintChanged = 0;
     int nTime = 0;
     
     // StopWatch
@@ -30,13 +35,27 @@ Timer       stopWatchTimer;
     void Tick() {
         nTime += 1;
     }
+    
+    void testSequenceLED(){
+        onBoardLED = 1;
+        wait(1);
+        onBoardLED = 0;
+        wait(1);
+        onBoardLED = 1;
+        wait(0.2);
+        onBoardLED = 0;
+        wait(0.5);
+        onBoardLED = 1;
+        wait(0.2);
+        onBoardLED = 0;
+    }
 
 // Tiefpass (Mittelwert)
     float analogInput() {
-        static float  analog = 0.0F;
+        static float  analog = adSensor;
         float adin = adSensor  ;
     
-        analog = (analog * 99 + adin) /100;
+        analog = (analog * 49 + adin) /50;
     
         return analog;
     }
@@ -44,6 +63,17 @@ Timer       stopWatchTimer;
     void setNextStateAndTheWaitTime(STATE state, int time) {
         nStateChanged = nTime + time;
         enState = state;
+    }
+    
+    void printDataToTerminal(int time) {
+        if (nPrintChanged - nTime <= 0) {
+            adinRaw = adSensor;
+            PC.printf("\x1B""A%f\rB%f\rC%f\rD%f\r\n", analogInput(), adinRaw, MINHUMIDITY, testPeak);
+            PC.printf("\x1B""Eanalog_wert=%f\r\n",analogInput());   
+            PC.printf("\x1B""Eanalog_wert_Raw=%f\r\n",adinRaw);  
+                        
+            nPrintChanged = nTime + time;
+        }
     }
 
     void calcTime() {
@@ -63,26 +93,26 @@ Timer       stopWatchTimer;
         calcTime();
         switch (enState) {
             case stINIT:
-                //PC.printf("INIT\r\n");
                 pump = stOFF;
                 enState = stCHECK;
                 break;
     
             case stCHECK:
-                //PC.printf("%d:%d:%d,%d - SensorOutput: %f - Status: CHECK\r\n", nHour, nMin, nSek, nMill, analogInput());
-                //testPeak = 1;
+            PC.printf("CHECK\r\n");
+                testSequenceLED();
                 if(analogInput() > MINHUMIDITY){
-                    setNextStateAndTheWaitTime(stPUMP, 1); //pump for 1 second
+                    setNextStateAndTheWaitTime(stPUMP, 2); //pump for 1 second
                     break;
                 }
                 
                 setNextStateAndTheWaitTime(stWAIT, 120);    //wait 2 minutes
+                wait(4);
                 break;
+                
             case stPUMP:
-                //PC.printf("PUMP\r\n");
+            PC.printf("PUMP\r\n");
                 pump = stON;
                 if (nStateChanged - nTime <= 0) {
-                    
                     PC.printf("%d:%d:%d,%d - SensorOutput: %f - Status: PUMP \r\n", nHour, nMin, nSek, nMill, analogInput());
                     pump = stOFF;
                     setNextStateAndTheWaitTime(stWAIT, 120);    //wait 2 minutes
@@ -90,11 +120,10 @@ Timer       stopWatchTimer;
                 break;
     
             case stWAIT:
-                //PC.printf("WAIT\r\n");
-                //testPeak = 0;
-                pump = stOFF;
+                PC.printf("WAIT\r\n");
+                //pump = stOFF;
                 if (nStateChanged - nTime <= 0) {
-                   setNextStateAndTheWaitTime(stCHECK, 0);      //check Status
+                    enState = stCHECK;                  //check Status    
                 }
                 break;
         }
@@ -107,12 +136,11 @@ Timer       stopWatchTimer;
         stopWatchTimer.start();
         
         PC.printf("Start Watering System!\r\n");
-          
+
         while(1)
         {
             StateMachine();
-            float adinRaw = adSensor;
-            PC.printf("#A%f\rB%f\rC%f\rD%f\r\n", analogInput(), adinRaw, MINHUMIDITY, testPeak);
-            wait(0.1);
+            printDataToTerminal(DATARESOLUTION); 
         }
     }
+
