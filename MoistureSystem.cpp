@@ -1,7 +1,9 @@
 #include "mbed.h"
 
-#define MINHUMIDITY     0.65F     // Breakpoint on which humidity the system will react 0.65
-#define DATARESOLUTION  10        // Resolution for the Serial Data which will be printed to the Terminal
+#define MINHUMIDITY      0.65F  // Breakpoint on which humidity the system will react [0.65]
+#define WAIT_TIME        1800   // how long the system will stay in the WAIT State [1800 - every 30 minutes]
+#define PUMP_TIME        2      // how long the system will stay in the PUMP State [2]
+#define DATA_RESOLUTION  10     // Resolution for the Serial Data which will be printed to the Terminal [10]
 
 Serial      PC(PA_2,PA_3);      // UART
 AnalogIn    adSensor(PC_0);    
@@ -17,6 +19,7 @@ Timer       stopWatchTimer;
     int nStateChanged = 0;
     int nPrintChanged = 0;
     int nTime = 0;
+    int waitFlag = 1;
     
     // StopWatch
     int nTimer = 0;
@@ -69,7 +72,7 @@ Timer       stopWatchTimer;
         if (nPrintChanged - nTime <= 0) {
             adinRaw = adSensor;
             PC.printf("\x1B""A%f\rB%f\rC%f\rD%f\r\n", analogInput(), adinRaw, MINHUMIDITY, testPeak);
-            PC.printf("\x1B""Eanalog_wert=%f\r\n",analogInput());   
+            PC.printf("\x1B""Eanalog_wert=%f\r\n", analogInput());   
             PC.printf("\x1B""Eanalog_wert_Raw=%f\r\n",adinRaw);  
                         
             nPrintChanged = nTime + time;
@@ -98,14 +101,14 @@ Timer       stopWatchTimer;
                 break;
     
             case stCHECK:
-            PC.printf("CHECK\r\n");
+            PC.printf("%d:%d:%d - CHECK\r\n", nHour, nMin, nSek);
                 testSequenceLED();
                 if(analogInput() > MINHUMIDITY){
-                    setNextStateAndTheWaitTime(stPUMP, 2); //pump for 1 second
+                    setNextStateAndTheWaitTime(stPUMP, PUMP_TIME); //pump for x second
                     break;
                 }
                 
-                setNextStateAndTheWaitTime(stWAIT, 120);    //wait 2 minutes
+                setNextStateAndTheWaitTime(stWAIT, WAIT_TIME);    //wait y minutes
                 wait(4);
                 break;
                 
@@ -115,14 +118,20 @@ Timer       stopWatchTimer;
                 if (nStateChanged - nTime <= 0) {
                     PC.printf("%d:%d:%d,%d - SensorOutput: %f - Status: PUMP \r\n", nHour, nMin, nSek, nMill, analogInput());
                     pump = stOFF;
-                    setNextStateAndTheWaitTime(stWAIT, 120);    //wait 2 minutes
+                    setNextStateAndTheWaitTime(stWAIT, WAIT_TIME);    //wait y minutes
                 }
                 break;
     
             case stWAIT:
-                PC.printf("WAIT\r\n");
-                //pump = stOFF;
+                if(waitFlag == 1) 
+                { 
+                    PC.printf("%d:%d:%d - WAIT\r\n", nHour, nMin, nSek);
+                    waitFlag = 0;
+                }
+  
+                
                 if (nStateChanged - nTime <= 0) {
+                    waitFlag = 1;
                     enState = stCHECK;                  //check Status    
                 }
                 break;
@@ -140,7 +149,7 @@ Timer       stopWatchTimer;
         while(1)
         {
             StateMachine();
-            printDataToTerminal(DATARESOLUTION); 
+            printDataToTerminal(DATA_RESOLUTION); 
         }
     }
 
