@@ -1,6 +1,6 @@
 #include "mbed.h"
 
-#define MINHUMIDITY      0.65F  // Breakpoint on which humidity the system will react [0.65]
+#define MINHUMIDITY      0.57F  // Breakpoint on which humidity the system will react [0.65]
 #define WAIT_TIME        1800   // how long the system will stay in the WAIT State [1800 - every 30 minutes]
 #define PUMP_TIME        2      // how long the system will stay in the PUMP State [2]
 #define DATA_RESOLUTION  10     // Resolution for the Serial Data which will be printed to the Terminal [10]
@@ -19,7 +19,7 @@ Timer       stopWatchTimer;
     int nStateChanged = 0;
     int nPrintChanged = 0;
     int nTime = 0;
-    int waitFlag = 1;
+    int stateFlag = 1;
     
     // StopWatch
     int nTimer = 0;
@@ -109,29 +109,31 @@ Timer       stopWatchTimer;
                 }
                 
                 setNextStateAndTheWaitTime(stWAIT, WAIT_TIME);    //wait y minutes
-                wait(4);
                 break;
                 
             case stPUMP:
-            PC.printf("PUMP\r\n");
-                pump = stON;
+                if(stateFlag == 1) { 
+                    PC.printf("%d:%d:%d - PUMP\r\n", nHour, nMin, nSek);
+                    pump = stON;
+                    stateFlag = 0;
+                }
+                
                 if (nStateChanged - nTime <= 0) {
-                    PC.printf("%d:%d:%d,%d - SensorOutput: %f - Status: PUMP \r\n", nHour, nMin, nSek, nMill, analogInput());
                     pump = stOFF;
+                    stateFlag = 1;
                     setNextStateAndTheWaitTime(stWAIT, WAIT_TIME);    //wait y minutes
                 }
                 break;
     
             case stWAIT:
-                if(waitFlag == 1) 
+                if(stateFlag == 1) 
                 { 
                     PC.printf("%d:%d:%d - WAIT\r\n", nHour, nMin, nSek);
-                    waitFlag = 0;
+                    stateFlag = 0;
                 }
   
-                
                 if (nStateChanged - nTime <= 0) {
-                    waitFlag = 1;
+                    stateFlag = 1;
                     enState = stCHECK;                  //check Status    
                 }
                 break;
@@ -152,4 +154,3 @@ Timer       stopWatchTimer;
             printDataToTerminal(DATA_RESOLUTION); 
         }
     }
-
